@@ -1,5 +1,5 @@
 from api.serializers import (PasswordSerializer, SubscribeSerializer,
-                             UserSerializer, UserSubscribeSerializer)
+                             UserSerializer)
 from django.shortcuts import get_object_or_404
 from recipes.models import Subscribe
 from rest_framework import filters, status, viewsets
@@ -12,14 +12,19 @@ from .models import User
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    '''Вьюсет для показа юзера'''
     queryset = User.objects.all()
     pagination_class = LimitOffsetPagination
     permission_classes = (AllowAny,)
     serializer_class = UserSerializer
     filter_backends = (filters.OrderingFilter,)
 
-    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
+    @action(
+        detail=False, methods=['GET'],
+        permission_classes=[IsAuthenticated]
+    )
     def me(self, request):
+        '''Показывает текущего юзера.'''
         queryset = User.objects.filter(id=request.user.id)
         serializer = UserSerializer(
             queryset,
@@ -28,23 +33,45 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data[0])
 
-
-    @action(detail=False, methods=['POST'], permission_classes=[IsAuthenticated])
+    @action(
+        detail=False, methods=['POST'],
+        permission_classes=[IsAuthenticated]
+    )
     def set_password(self, request):
+        '''
+        Проверяет введённый пароль с паролем из БД.
+        Устанавливает новый пароль из сериализатора, если всё успешно.
+        '''
         serializer = PasswordSerializer(data=request.data)
         user = get_object_or_404(User, username=request.user.username)
-        if serializer.is_valid():
-            if not user.check_password(serializer.data.get('current_password')):
-                return Response({'incorrect_password': ['Введите свой пароль еще раз.']}, 
-                               status=status.HTTP_400_BAD_REQUEST)
-            user.set_password(serializer.data.get('new_password'))
-            user.save()
-            return Response({'status': 'Новый пароль успешно установлен!'}, status=status.HTTP_200_OK)
-        return Response(serializer.errors,
-                       status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-    @action(detail=True, methods=['POST', 'DELETE'], permission_classes=[IsAuthenticated])
+        if not user.check_password(serializer.data.get('old_password')):
+            return Response(
+                {'incorrect_password': ['Введите свой пароль еще раз.']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user.set_password(serializer.data.get('new_password'))
+        user.save()
+        return Response(
+            {'status': 'Новый пароль успешно установлен!'},
+            status=status.HTTP_200_OK
+        )
+
+    @action(
+        detail=True, methods=['POST', 'DELETE'],
+        permission_classes=[IsAuthenticated]
+    )
     def subscribe(self, request, pk):
+        '''
+        Создает или удаляет подписку на пользователя.
+        Перед этим проверяет подписку на наличие в БД и на то,
+        чтобы пользователь не смог подписаться на самого себя.
+        '''
         if request.method == 'DELETE':
             user = request.user
             author = get_object_or_404(User, id=pk)
@@ -53,6 +80,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 result.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
         serializer = SubscribeSerializer
         user = request.user
         author = get_object_or_404(User, id=pk)
@@ -72,9 +100,12 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
-    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
+    @action(
+        detail=False, methods=['GET'],
+        permission_classes=[IsAuthenticated]
+    )
     def subscriptions(self, request):
+        '''Возвращает все подписки пользователя.'''
         user = request.user
         queryset = Subscribe.objects.filter(user=user)
         pages = self.paginate_queryset(queryset)

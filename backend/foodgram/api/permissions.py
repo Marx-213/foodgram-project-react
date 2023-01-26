@@ -2,7 +2,9 @@ from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
 class IsAdminOrReadOnly(BasePermission):
-    message = 'Вы не авторизованы на данный запрос, sorry buddy'
+    '''Пермишен для тегов и ингредиентов.'''
+
+    message = 'Вы не являетесь админом!'
 
     def has_permission(self, request, view):
         return (
@@ -11,21 +13,13 @@ class IsAdminOrReadOnly(BasePermission):
         )
 
 
-class IsAdmin(BasePermission):
-    message = 'Вы не авторизованы на данный запрос, sorry buddy'
+class IsAuthorOrReadOnly(BasePermission):
+    '''
+    Изменить рецепт может только его автор.
+    Все остальные не имеют доступа.
+    '''
 
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.is_admin
-
-    def has_object_permission(self, request, view, obj):
-        return (
-            request.user.is_admin
-            and request.user.is_authenticated
-        )
-
-
-class IsAuthorOrReadOnly (BasePermission):
-    message = 'Вы не являетесь автором рецепта'
+    message = 'Вы не являетесь автором рецепта!'
 
     def has_permission(self, request, view):
         return (

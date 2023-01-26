@@ -69,7 +69,6 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return self.name
-    
 
 
 class Recipe(models.Model):
@@ -222,6 +221,7 @@ class Subscribe(models.Model):
                 name='unique_user_author'
             )
         ]
+
     def __str__(self) -> str:
         return f'{self.user} подписан на {self.author}'
 

@@ -8,6 +8,7 @@ from users.models import User
 
 class TagSerializer(serializers.ModelSerializer):
     '''Сериализатор для тегов с валидацией hex цвета'''
+
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug')
@@ -23,6 +24,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 class IngredientSerializer(serializers.ModelSerializer):
     '''Сериализатор для ингредиентов'''
+
     class Meta:
         model = Ingredient
         fields = '__all__'
@@ -31,6 +33,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
     '''Сериализатор количества ингредиентов'''
+
     id = serializers.ReadOnlyField(source='ingredients.id')
     name = serializers.ReadOnlyField(source='ingredients.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -44,6 +47,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     '''Сериализатор пользователей.'''
+
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -77,6 +81,7 @@ class UserSerializer(serializers.ModelSerializer):
         Проверка подписки на конкретного пользователя.
         В зависимости от её результата возвращает True или False.
         '''
+
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
@@ -98,17 +103,18 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PasswordSerializer(serializers.Serializer):
     '''Сериализатор смены пароля пользователя.'''
-    current_password = serializers.CharField(required=True)
+
+    old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
 
-    def validate_current_password(self, current_password):
-        '''Проверка пароля из базы на допустимую длину.'''
-        if len(current_password) > 150:
+    def validate_old_password(self, old_password):
+        '''Проверка введённого пароля на допустимую длину.'''
+        if len(old_password) > 150:
             raise ValidationError('Недопустимая длина пароля.')
-        return current_password
+        return old_password
 
     def validate_new_password(self, new_password):
-        '''Проверка введённого пароля на допустимую длину.'''
+        '''Проверка нового пароля на допустимую длину.'''
         if len(new_password) > 150:
             raise ValidationError('Недопустимая длина нового пароля.')
         return new_password
@@ -116,6 +122,7 @@ class PasswordSerializer(serializers.Serializer):
 
 class AddIngredientSerializer(serializers.ModelSerializer):
     '''Сериализатор добавления ингредиента.'''
+
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
 
     class Meta:
@@ -125,6 +132,7 @@ class AddIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeListSerializer(serializers.ModelSerializer):
     '''Сериализатор для отображения рецептов'''
+
     tags = TagSerializer(many=True, read_only=True)
     author = UserSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField(read_only=True)
@@ -157,7 +165,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        queryset = Favorite.objects.filter(user=user)
+        queryset = Favorite.objects.filter(user=user, recipe=obj.id)
         if not queryset:
             return False
         serializer = FavoriteSerializer(
@@ -171,13 +179,14 @@ class RecipeListSerializer(serializers.ModelSerializer):
             return False
 
     def get_is_in_shopping_cart(self, obj):
-        '''Получение рецепта(obj) и проверка того,
+        '''
+        Получение рецепта(obj) и проверка того,
         что он в Корзине покупок.
         '''
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        queryset = ShoppingCart.objects.filter(user=user)
+        queryset = ShoppingCart.objects.filter(user=user, recipe=obj.id)
         if not queryset:
             return False
         serializer = ShoppingCartSerializer(
@@ -218,12 +227,14 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         '''При успешном создании рецепта
-        возвращает данные в представлении RecipeListSerializer.'''
+        возвращает данные в представлении RecipeListSerializer.
+        '''
         request = self.context.get('request')
         context = {'request': request}
         return RecipeListSerializer(instance, context=context).data
 
     def create(self, validated_data):
+        '''Создание рецепта вместе с тегами и ингредиентами.'''
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         author = self.context.get('request').user
@@ -248,6 +259,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, recipe, validated_data):
+        '''Обновление рецепта вместе с тегами и ингредиентами.'''
         tags = validated_data.get('tags')
         ingredients = validated_data.get('ingredients')
         recipe.name = validated_data.get('name', recipe.name)
@@ -275,6 +287,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
+    '''Сериализатор с некоторыми данными из Recipe.'''
 
     class Meta:
         model = Recipe
@@ -287,14 +300,17 @@ class RecipeShortSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для списка покупок
-    """
+    '''Сериализатор для списка покупок.'''
+
     class Meta:
         model = ShoppingCart
         fields = ('user', 'recipe')
 
     def to_representation(self, instance):
+        '''
+        При успешном добавлении рецепта в список покупок
+        возвращает данные в представлении RecipeShortSerializer.
+        '''
         request = self.context.get('request')
         context = {'request': request}
         return RecipeShortSerializer(
@@ -302,12 +318,16 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
+    '''Сериализатор для избранных рецептов.'''
 
     class Meta:
         model = Favorite
         fields = ('user', 'recipe')
 
     def to_representation(self, instance):
+        '''При успешном добавлении рецепта в Избранное
+        возвращает данные в представлении RecipeShortSerializer.
+        '''
         request = self.context.get('request')
         context = {'request': request}
         return RecipeShortSerializer(
@@ -315,8 +335,10 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class UserSubscribeSerializer(UserSerializer):
-    """Сериализатор вывода авторов на которых подписан текущий пользователь.
-    """
+    '''
+    Сериализатор вывода авторов на которых подписан текущий пользователь.
+    '''
+
     recipes = RecipeShortSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
@@ -336,18 +358,27 @@ class UserSubscribeSerializer(UserSerializer):
         read_only_fields = '__all__',
 
     def get_is_subscribed(self, obj):
+        '''
+        Всегда возвращает True, т.к. проверка подписки есть на уровне views.
+        '''
         return True
 
     def get_recipes_count(self, obj):
+        '''Количество рецептов автора.'''
         return obj.recipes.count()
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
+    '''Подписка на авторов и создание новой записи в Subsribe.'''
+
     class Meta:
         model = Subscribe
         fields = ('user', 'author')
 
     def to_representation(self, instance):
+        '''При успешной подписке
+        возвращает данные в представлении UserSubscribeSerializer.
+        '''
         request = self.context.get('request')
         context = {'request': request}
         return UserSubscribeSerializer(instance.author, context=context).data
