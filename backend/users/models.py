@@ -3,6 +3,8 @@ from django.db import models
 
 
 class User(AbstractUser):
+    '''Кастомная модель юзера.'''
+
     email = models.EmailField(
         verbose_name='Адрес электронной почты',
         help_text='Укажите адрес электронной почты',
@@ -12,7 +14,6 @@ class User(AbstractUser):
     username = models.TextField(
         verbose_name='Уникальный юзернейм',
         help_text='Укажите юзернейм',
-        blank=True,
         unique=True,
         max_length=150
     )
@@ -39,7 +40,7 @@ class User(AbstractUser):
     )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['username', 'password', 'first_name', 'last_name']
 
     class Meta:
         verbose_name = 'Пользователь'

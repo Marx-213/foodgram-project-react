@@ -22,7 +22,6 @@ class RecipeFilter(FilterSet):
         '''Показывает только рецепты, находящиеся в списке Избранного.'''
         if self.request.user.is_anonymous:
             return queryset
-        print(value)
         if value is False:
             return queryset.exclude(user_favorites__user=self.request.user.id)
         return queryset.filter(user_favorites__user=self.request.user.id)
