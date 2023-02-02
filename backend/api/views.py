@@ -15,7 +15,8 @@ from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingCartSerializer,
                           TagSerializer)
-from django.db.models import F
+from django.db.models import F, Exists, OuterRef
+
 
 User = get_user_model()
 
@@ -53,13 +54,34 @@ class RecipeViewSet(viewsets.ModelViewSet):
     Вьюсет для работы с рецептами.
     Незарегистрованным пользователям разрешен только просмотр рецептов.
     '''
-    queryset = Recipe.objects.prefetch_related('tags', 'ingredients')
+    queryset = Recipe.objects.prefetch_related(
+        'tags',
+        'ingredients',
+    ).select_related('author')
     serializer_class = RecipeSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
     search_fields = ('name',)
     permission_classes = (IsAuthorOrReadOnly,)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if user.is_authenticated:
+            favorite_recipes = Favorite.objects.filter(
+                user=user,
+                recipe=OuterRef('id')
+            )
+            queryset2 = queryset.filter(
+                Exists(favorite_recipes)
+            )
+            a = super().get_serializer(queryset2)
+            print(a.data)
+            print(queryset2, 'queryset2')
+        else:
+            queryset2 = queryset.all()
+        return queryset
 
     @action(
         detail=True, methods=['POST', 'DELETE'],

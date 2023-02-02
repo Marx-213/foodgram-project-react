@@ -4,7 +4,7 @@ from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from users.models import User
-from django.db.models import Exists
+from django.db.models import OuterRef
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -150,15 +150,29 @@ class RecipeListSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         '''Получение рецепта(obj) и проверка того, что он в Избранном.'''
         user = self.context.get('request').user
+        print(obj)
         if user.is_anonymous:
             return False
-        subquery = Favorite.objects.filter(
-            recipe=obj.id,
-            user=user
-        ).values('id')
-        return Recipe.objects.filter(
-            id=Exists(subquery)
+        return True
+        favorite_recipes = Favorite.objects.filter(
+            user=user,
+            recipe=OuterRef('id')
+        ).values('recipe')
+        queryset = Recipe.objects.filter(
+            id__in=favorite_recipes
         ).exists()
+        queryse = Recipe.objects.filter(
+            id__in=favorite_recipes
+        )
+        print(queryse, '2dad')
+        print(queryset, 'fdafdsfdsfadsfad')
+        return queryset
+        # subquery = Favorite.objects.filter(
+        #     recipe=obj.id,
+        #     user=user)
+        # return Recipe.objects.filter(
+        #     id=Exists(subquery)
+        # ).exists()
 
     def get_is_in_shopping_cart(self, obj):
         '''

@@ -25,13 +25,8 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def me(self, request):
         '''Показывает текущего юзера.'''
-        queryset = User.objects.filter(id=request.user.id)
-        serializer = UserSerializer(
-            queryset,
-            many=True,
-            context={'request': request}
-        )
-        return Response(serializer.data[0])
+        self.kwargs['pk'] = request.user.pk
+        return self.retrieve(request)
 
     @action(
         detail=False, methods=['POST'],
@@ -72,18 +67,17 @@ class UserViewSet(viewsets.ModelViewSet):
         Перед этим проверяет подписку на наличие в БД и на то,
         чтобы пользователь не смог подписаться на самого себя.
         '''
-        if request.method == 'DELETE':
-            user = request.user
-            author = get_object_or_404(User, id=pk)
-            result = get_object_or_404(Subscribe, user=user, author=author)
-            if result:
-                result.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        serializer = SubscribeSerializer
         user = request.user
         author = get_object_or_404(User, id=pk)
+
+        if request.method == 'DELETE':
+            result = get_object_or_404(Subscribe, user=user, author=author)
+            if not result:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            result.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        serializer = SubscribeSerializer
         if user == author:
             return Response(
                 {'errors': 'Нельзя подписаться на самого себя!'},
