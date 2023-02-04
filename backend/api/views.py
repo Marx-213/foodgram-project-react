@@ -66,21 +66,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorOrReadOnly,)
 
     def get_queryset(self):
+        '''Делает подзапрос в модель Favorite и ShoppingCart.
+        Аннотирует поля is_favorited и is_in_shopping_cart,
+        и возвращает для них True или False,
+        в зависимости от результата подзапроса.
+        '''
         queryset = super().get_queryset()
-        user = self.request.user
-        if user.is_authenticated:
-            favorite_recipes = Favorite.objects.filter(
-                user=user,
-                recipe=OuterRef('id')
-            )
-            queryset2 = queryset.filter(
-                Exists(favorite_recipes)
-            )
-            a = super().get_serializer(queryset2)
-            print(a.data)
-            print(queryset2, 'queryset2')
-        else:
-            queryset2 = queryset.all()
+        user = self.request.user.id
+        favorite_recipes = Favorite.objects.filter(
+            user=user,
+            recipe=OuterRef('id')
+        )
+        shopping_cart = ShoppingCart.objects.filter(
+            user=user,
+            recipe=OuterRef('id')
+        )
+        queryset = queryset.annotate(
+            is_favorited=Exists(favorite_recipes),
+            is_in_shopping_cart=Exists(shopping_cart)
+        )
         return queryset
 
     @action(

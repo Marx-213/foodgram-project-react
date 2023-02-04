@@ -4,7 +4,6 @@ from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from users.models import User
-from django.db.models import OuterRef
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -124,8 +123,8 @@ class RecipeListSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     author = UserSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField(read_only=True)
-    is_favorited = serializers.SerializerMethodField(read_only=True)
-    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
+    is_favorited = serializers.BooleanField(read_only=True)
+    is_in_shopping_cart = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -146,43 +145,6 @@ class RecipeListSerializer(serializers.ModelSerializer):
         '''Получение количества ингредиентов из модели IngredientAmount.'''
         queryset = IngredientAmount.objects.filter(recipe=obj)
         return IngredientAmountSerializer(queryset, many=True).data
-
-    def get_is_favorited(self, obj):
-        '''Получение рецепта(obj) и проверка того, что он в Избранном.'''
-        user = self.context.get('request').user
-        print(obj)
-        if user.is_anonymous:
-            return False
-        return True
-        favorite_recipes = Favorite.objects.filter(
-            user=user,
-            recipe=OuterRef('id')
-        ).values('recipe')
-        queryset = Recipe.objects.filter(
-            id__in=favorite_recipes
-        ).exists()
-        queryse = Recipe.objects.filter(
-            id__in=favorite_recipes
-        )
-        print(queryse, '2dad')
-        print(queryset, 'fdafdsfdsfadsfad')
-        return queryset
-        # subquery = Favorite.objects.filter(
-        #     recipe=obj.id,
-        #     user=user)
-        # return Recipe.objects.filter(
-        #     id=Exists(subquery)
-        # ).exists()
-
-    def get_is_in_shopping_cart(self, obj):
-        '''
-        Получение рецепта(obj) и проверка того,
-        что он в Корзине покупок.
-        '''
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return ShoppingCart.objects.filter(user=user, recipe=obj.id).exists()
 
 
 class RecipeSerializer(serializers.ModelSerializer):

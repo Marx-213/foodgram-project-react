@@ -114,16 +114,6 @@ class Recipe(models.Model):
         help_text='Укажите время приготовления блюда',
         default=1
     )
-    is_favorited = models.ManyToManyField(
-        User,
-        verbose_name='Понравившиеся рецепты',
-        related_name='favorites',
-    )
-    is_in_shopping_cart = models.ManyToManyField(
-        User,
-        verbose_name='Список покупок',
-        related_name='shopping_carts',
-    )
     pub_date = models.DateTimeField(
         'Дата публикации рецепта',
         auto_now_add=True,

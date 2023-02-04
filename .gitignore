@@ -129,4 +129,4 @@ dmypy.json
 # .idea
 .idea
 .vscode
-recipes_images
+recipes_images/
