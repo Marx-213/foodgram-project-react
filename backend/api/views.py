@@ -64,13 +64,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorOrReadOnly,)
 
     def get_queryset(self):
-        '''Делает подзапрос в модель Favorite и ShoppingCart.
+        '''Делает подзапрос в модели Favorite и ShoppingCart.
         Аннотирует поля is_favorited и is_in_shopping_cart,
         и возвращает для них True или False,
         в зависимости от результата подзапроса.
         '''
-        queryset = super().get_queryset()
-        user = self.request.user.id
+        user = self.request.user
+        if user.is_anonymous:
+            user = 0
         favorite_recipes = Favorite.objects.filter(
             user=user,
             recipe=OuterRef('id')
@@ -79,7 +80,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             user=user,
             recipe=OuterRef('id')
         )
-        queryset = queryset.annotate(
+        queryset = Recipe.objects.annotate(
             is_favorited=Exists(favorite_recipes),
             is_in_shopping_cart=Exists(shopping_cart)
         )

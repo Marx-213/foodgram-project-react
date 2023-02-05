@@ -25,7 +25,9 @@ SECRET_KEY = '*fv$8zsmn%r4jc@di&gab_mjico#tnj$pu^fo94v2evd)i_1(h'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '*'
+]
 
 
 # Application definition
@@ -89,12 +91,12 @@ DATABASES = {
 
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'postgres',
-#         'USER': 'postgres',
-#         'PASSWORD': 'postgres',
-#         'HOST': 'db',
-#         'PORT': '1234',
+#         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+#         'NAME': os.getenv('DB_NAME', 'postgres'),
+#         'USER': os.getenv('POSTGRES_USER', 'postgres'),
+#         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres'),
+#         'HOST': os.getenv('DB_HOST', 'db'),
+#         'PORT': os.getenv('DB_PORT', '5432')
 #     }
 # }
 
@@ -151,3 +153,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
