@@ -91,14 +91,14 @@ class UserSerializer(serializers.ModelSerializer):
 class PasswordSerializer(serializers.Serializer):
     '''Сериализатор смены пароля пользователя.'''
 
-    old_password = serializers.CharField(required=True)
+    current_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
 
-    def validate_old_password(self, old_password):
+    def validate_current_password(self, current_password):
         '''Проверка введённого пароля на допустимую длину.'''
-        if len(old_password) > 150:
+        if len(current_password) > 150:
             raise ValidationError('Недопустимая длина пароля.')
-        return old_password
+        return current_password
 
     def validate_new_password(self, new_password):
         '''Проверка нового пароля на допустимую длину.'''

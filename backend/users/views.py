@@ -45,7 +45,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if not user.check_password(serializer.data.get('old_password')):
+        if not user.check_password(serializer.data.get('current_password')):
             return Response(
                 {'incorrect_password': ['Введите свой пароль еще раз.']},
                 status=status.HTTP_400_BAD_REQUEST

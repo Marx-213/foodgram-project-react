@@ -6,11 +6,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .filters import RecipeFilter
+from .pagination import StandardResultsSetPagination
 from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingCartSerializer,
@@ -27,7 +27,6 @@ class TagViewSet(viewsets.ModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    pagination_class = LimitOffsetPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ('name',)
     permission_classes = (IsAdminOrReadOnly,)
@@ -41,7 +40,6 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    pagination_class = LimitOffsetPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ('name',)
     permission_classes = (IsAdminOrReadOnly,)
@@ -57,10 +55,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         'ingredients',
     ).select_related('author')
     serializer_class = RecipeSerializer
-    pagination_class = LimitOffsetPagination
+    pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
-    search_fields = ('name',)
     permission_classes = (IsAuthorOrReadOnly,)
 
     def get_queryset(self):
