@@ -77,11 +77,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             user=user,
             recipe=OuterRef('id')
         )
-        queryset = Recipe.objects.annotate(
+        return Recipe.objects.annotate(
             is_favorited=Exists(favorite_recipes),
             is_in_shopping_cart=Exists(shopping_cart)
         )
-        return queryset
 
     @action(
         detail=True, methods=['POST', 'DELETE'],
