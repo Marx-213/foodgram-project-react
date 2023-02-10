@@ -25,9 +25,14 @@ SECRET_KEY = '*fv$8zsmn%r4jc@di&gab_mjico#tnj$pu^fo94v2evd)i_1(h'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [
-    '158.160.46.76',
-]
+if DEBUG:
+    ALLOWED_HOSTS = [
+        '*',
+    ]
+else:
+    ALLOWED_HOSTS = [
+        os.getenv('SERVER_IP', default='*')
+    ]
 
 
 # Application definition
