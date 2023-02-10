@@ -103,11 +103,11 @@ class Recipe(models.Model):
         through='IngredientAmount',
     )
     tags = models.ManyToManyField(
-       Tag,
-       verbose_name='Тег',
-       through='TagRecipe',
-       related_name='recipes',
-       help_text='Выберите теги'
+        Tag,
+        verbose_name='Тег',
+        through='TagRecipe',
+        related_name='recipes',
+        help_text='Выберите теги'
     )
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления(в минутах)',

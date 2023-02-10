@@ -34,8 +34,9 @@ class Command(BaseCommand):
                         color=tag[1],
                         slug=tag[2]
                     )
-                self.stdout.write(self.style.SUCCESS(
-                    'The database was successfully filled with tags'
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        'The database was successfully filled with tags'
                     )
                 )
         except FileNotFoundError:
