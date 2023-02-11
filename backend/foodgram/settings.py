@@ -31,7 +31,8 @@ if DEBUG:
     ]
 else:
     ALLOWED_HOSTS = [
-        os.getenv('SERVER_IP', default='*')
+        os.getenv('SERVER_IP'),
+        os.getenv('SERVER_DOMEN')
     ]
 
 
