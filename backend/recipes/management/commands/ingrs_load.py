@@ -3,7 +3,7 @@ import os
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from recipes.models import Ingredient
+from recipes.models import IngredientAmount
 
 CSV_DATA = os.path.join(settings.BASE_DIR, 'data')
 
@@ -31,7 +31,7 @@ class Command(BaseCommand):
                 ingredients = csv.reader(data)
                 for ingredient in ingredients:
                     name, measurement_unit = ingredient
-                    Ingredient.objects.get_or_create(
+                    IngredientAmount.objects.get_or_create(
                         name=name,
                         measurement_unit=measurement_unit
                     )
