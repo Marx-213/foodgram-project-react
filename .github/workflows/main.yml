@@ -70,6 +70,7 @@ jobs:
             sudo docker-compose exec web python manage.py ingrs_load
             sudo docker-compose exec web python manage.py tags_load
             sudo docker-compose exec web python manage.py collectstatic --no-input
+            sudo docker-compose exec web python manage.py collectstatic --no-input
 
   send_message:
     runs-on: ubuntu-latest
