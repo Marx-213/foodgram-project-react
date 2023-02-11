@@ -65,11 +65,11 @@ jobs:
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
             echo SERVER_IP=${{ secrets.SERVER_IP }} >> .env
             echo SERVER_DOMEN=${{ secrets.SERVER_DOMEN }} >> .env
+            cd infra/
             sudo docker-compose -f docker-compose.yml -p infra up -d
             sudo docker-compose exec web python manage.py migrate
             sudo docker-compose exec web python manage.py ingrs_load
             sudo docker-compose exec web python manage.py tags_load
-            sudo docker-compose exec web python manage.py collectstatic --no-input
             sudo docker-compose exec web python manage.py collectstatic --no-input
 
   send_message:
