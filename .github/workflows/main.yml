@@ -65,6 +65,7 @@ jobs:
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
             echo SERVER_IP=${{ secrets.SERVER_IP }} >> .env
             echo SERVER_DOMEN=${{ secrets.SERVER_DOMEN }} >> .env
+            sudo docker-compose down -v
             cd foodgram-project-react/infra/
             sudo docker-compose -f docker-compose.yml -p infra up -d
             sudo docker-compose exec web python manage.py migrate
