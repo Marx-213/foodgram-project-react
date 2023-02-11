@@ -66,8 +66,12 @@ jobs:
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
             echo SERVER_IP=${{ secrets.SERVER_IP }} >> .env
             echo SERVER_DOMEN=${{ secrets.SERVER_DOMEN }} >> .env
+            sudo docker-compose down -v
             sudo docker-compose up -d --build
-
+            sudo docker-compose exec web python manage.py migrate
+            sudo docker-compose exec web python manage.py ingrs_load
+            sudo docker-compose exec web python manage.py tags_load
+            sudo docker-compose exec web python manage.py collectstatic --no-input
 
   send_message:
     runs-on: ubuntu-latest
